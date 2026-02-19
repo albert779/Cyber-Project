@@ -1,7 +1,5 @@
 import threading
 from base64 import encode
-
-
 from protocol import *
 import socket
 
@@ -23,6 +21,8 @@ class CServerBL:
 
     def start_server(self):
         try:
+            self.client_handlers = {}
+            self._clients_data = {}
             self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self._server_socket.bind((self._host, self._port))
             self._server_socket.listen(5)
@@ -53,14 +53,15 @@ class CServerBL:
             write_to_log("[SERVER_BL] Exception in start_server fn : {}".format(e))
 
     def stop_server(self):
-        try:
-            self._server_socket.shutdown(socket.SHUT_RDWR)
-        except Exception:
-            pass
+        # try:
+        #     self._server_socket.shutdown(socket.SHUT_RDWR) 
+        # except Exception:
+        #     pass
 
-        self.stop_event.set()
-        self._server_socket.close()
-        for address in self._client_handlers:
+        self.stop_event.set() # signal the server thread to stop 
+        self._server_socket.close() # close the server socket to unblock the accept() call
+        write_to_log(self._client_handlers)
+        for address in self._client_handlers: #
             write_to_log( self._client_handlers[address]._client_socket)
             self._client_handlers[address]._client_socket.send('("CLOSE","False")'.encode())
             self._client_handlers[address].stop()
